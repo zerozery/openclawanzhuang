@@ -1,7 +1,13 @@
 @echo off
-chcp 65001 >nul
 title MOSS 分身完整安装
-setlocal EnableDelayedExpansion
+
+:: 防止窗口一闪而过
+if "%~1"=="-test" (
+    echo [测试模式] 脚本开始运行...
+)
+
+:: 尝试设置 UTF-8 编码（失败也不影响）
+chcp 65001 >nul 2>&1
 
 echo.
 echo ========================================
@@ -10,6 +16,34 @@ echo ========================================
 echo.
 echo 正在安装 MOSS（玄柯的 AI 伙伴）到本机...
 echo.
+
+:: 检查是否在正确的目录
+echo [检查] 当前目录：%~dp0
+echo [检查] 脚本路径：%~f0
+echo.
+
+:: 检查 moss-full-package.tar.gz 是否存在
+set "PACKAGE_FILE=%~dp0moss-full-package.tar.gz"
+if exist "%PACKAGE_FILE%" (
+    echo ✓ 找到环境包：%PACKAGE_FILE%
+) else (
+    echo [错误] 未找到 moss-full-package.tar.gz
+    echo 位置：%PACKAGE_FILE%
+    echo.
+    echo 请确保此文件与安装脚本在同一文件夹
+    echo.
+    pause
+    exit /b 1
+)
+
+set /p startInstall="是否开始安装？(y/n): "
+if /i not "%startInstall%"=="y" (
+    echo 安装已取消
+    pause
+    exit /b 0
+)
+
+setlocal EnableDelayedExpansion
 
 :: 检查前置环境
 echo [准备] 检查前置环境...
