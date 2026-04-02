@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul
 title OpenClaw 简易安装
+setlocal EnableDelayedExpansion
 
 echo.
 echo ========================================
