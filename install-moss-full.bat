@@ -1,6 +1,7 @@
 @echo off
 chcp 65001 >nul
 title MOSS 分身完整安装
+setlocal EnableDelayedExpansion
 
 echo.
 echo ========================================
@@ -98,15 +99,25 @@ echo.
 echo 正在解压到工作区...
 if not exist "%WORKSPACE_DIR%" mkdir "%WORKSPACE_DIR%"
 
+:: 创建临时解压目录
+set "EXTRACT_DIR=%TEMP%\moss-extract"
+if exist "%EXTRACT_DIR%" rmdir /s /q "%EXTRACT_DIR%"
+mkdir "%EXTRACT_DIR%"
+
 :: 使用 tar 解压（Windows 10+ 支持）
-tar -xf "%TEMP%\moss-full-package.tar.gz" -C "%TEMP%"
+tar -xf "%TEMP%\moss-full-package.tar.gz" -C "%EXTRACT_DIR%"
 if %errorlevel% neq 0 (
-    echo [警告] tar 解压失败，尝试使用 PowerShell...
-    powershell -Command "Expand-Archive -Path '%TEMP%\moss-full-package.tar.gz' -DestinationPath '%TEMP%' -Force" 2>nul
+    echo [警告] tar 解压失败
+    pause
+    exit /b 1
 )
 
-:: 移动文件到工作区
-xcopy "%TEMP%\moss-full-package-*\*" "%WORKSPACE_DIR%\" /E /I /Y >nul 2>&1
+:: 查找解压后的文件夹并复制
+for /d %%i in ("%EXTRACT_DIR%\*") do (
+    echo 正在复制文件到工作区...
+    xcopy "%%i\*" "%WORKSPACE_DIR%\" /E /I /Y >nul 2>&1
+)
+
 if %errorlevel% equ 0 (
     echo ✓ 文件已解压到工作区
 ) else (
@@ -115,7 +126,7 @@ if %errorlevel% equ 0 (
 
 :: 清理临时文件
 del "%TEMP%\moss-full-package.tar.gz" >nul 2>&1
-rmdir /s /q "%TEMP%\moss-full-package-*" >nul 2>&1
+rmdir /s /q "%EXTRACT_DIR%" >nul 2>&1
 
 echo.
 
@@ -149,11 +160,11 @@ echo ✓ 启动脚本已创建：%START_SCRIPT%
 echo.
 set /p createShortcut="是否创建桌面快捷方式？(y/n): "
 if /i "%createShortcut%"=="y" (
-    powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\MOSS AI 助手.lnk'); $Shortcut.TargetPath = '%START_SCRIPT%'; $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; $Shortcut.Description = 'MOSS - 玄柯的 AI 伙伴'; $Shortcut.Save()"
+    powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut($env:USERPROFILE + '\Desktop\MOSS AI 助手.lnk'); $Shortcut.TargetPath = '%START_SCRIPT%'; $Shortcut.WorkingDirectory = '%INSTALL_DIR%'; $Shortcut.Description = 'MOSS - 玄柯的 AI 伙伴'; $Shortcut.Save()"
     if %errorlevel% equ 0 (
         echo ✓ 桌面快捷方式已创建
     ) else (
-        echo [警告] 快捷方式创建失败
+        echo [警告] 快捷方式创建失败，可手动创建
     )
 )
 echo.
