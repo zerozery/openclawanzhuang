@@ -81,19 +81,23 @@ if %errorlevel% neq 0 (
 echo ✓ OpenClaw 框架安装完成
 echo.
 
-:: 下载 MOSS 完整环境包
-echo [4/6] 下载 MOSS 完整环境包...
+:: 加载 MOSS 完整环境包
+echo [4/6] 加载 MOSS 完整环境包...
 echo ----------------------------------------
 set "WORKSPACE_DIR=%INSTALL_DIR%\workspace"
+set "PACKAGE_FILE=%~dp0moss-full-package.tar.gz"
 
-echo 正在下载 MOSS 完整环境包（约 260KB）...
-powershell -Command "Invoke-WebRequest -Uri 'https://github.com/zerozery/openclawanzhuang/raw/main/moss-full-package.tar.gz' -OutFile '%TEMP%\moss-full-package.tar.gz' -UseBasicParsing"
-if %errorlevel% neq 0 (
-    echo [错误] 下载失败，请检查网络
+:: 检查本地是否有压缩包
+if exist "%PACKAGE_FILE%" (
+    echo ✓ 找到本地环境包：%PACKAGE_FILE%
+) else (
+    echo [错误] 未找到 moss-full-package.tar.gz
+    echo 请确保此文件与安装脚本在同一文件夹
+    echo.
+    echo 下载地址：https://github.com/zerozery/openclawanzhuang
     pause
     exit /b 1
 )
-echo ✓ 环境包下载完成
 
 echo.
 echo 正在解压到工作区...
@@ -105,7 +109,7 @@ if exist "%EXTRACT_DIR%" rmdir /s /q "%EXTRACT_DIR%"
 mkdir "%EXTRACT_DIR%"
 
 :: 使用 tar 解压（Windows 10+ 支持）
-tar -xf "%TEMP%\moss-full-package.tar.gz" -C "%EXTRACT_DIR%"
+tar -xf "%PACKAGE_FILE%" -C "%EXTRACT_DIR%"
 if %errorlevel% neq 0 (
     echo [警告] tar 解压失败
     pause
@@ -125,7 +129,6 @@ if %errorlevel% equ 0 (
 )
 
 :: 清理临时文件
-del "%TEMP%\moss-full-package.tar.gz" >nul 2>&1
 rmdir /s /q "%EXTRACT_DIR%" >nul 2>&1
 
 echo.
