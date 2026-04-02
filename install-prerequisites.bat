@@ -1,7 +1,13 @@
 @echo off
-chcp 65001 >nul
 title OpenClaw 前置环境安装
-setlocal EnableDelayedExpansion
+
+:: 防止窗口一闪而过
+if "%~1"=="-test" (
+    echo [测试模式] 脚本开始运行...
+)
+
+:: 尝试设置 UTF-8 编码（失败也不影响）
+chcp 65001 >nul 2>&1
 
 echo.
 echo ========================================
@@ -14,6 +20,19 @@ echo   - pnpm (包管理器)
 echo   - Git (可选，用于版本控制)
 echo.
 
+:: 检查是否在正确的目录
+echo [检查] 当前目录：%~dp0
+echo [检查] 脚本路径：%~f0
+echo.
+
+set /p startInstall="是否开始安装？(y/n): "
+if /i not "%startInstall%"=="y" (
+    echo 安装已取消
+    pause
+    exit /b 0
+)
+
+setlocal EnableDelayedExpansion
 set "INSTALL_DIR=%USERPROFILE%\.openclaw"
 
 :: ========================================
